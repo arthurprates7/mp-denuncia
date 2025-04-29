@@ -51,13 +51,13 @@ class GptController extends Controller
             $processo = Cache::remember("processo_{$request->numero_cnj}", 3600, function () use ($request) {
                 return Processo::where('numero_cnj', $request->numero_cnj)->firstOrFail();
             });
-            
+
             // Usar cache para os embeddings
             $cacheKey = "processo_embeddings_{$processo->id}";
             $textosSimilares = Cache::remember($cacheKey, now()->addHours(24), function () use ($processo, $request) {
                 return $this->embeddingService->buscarSimilares($processo, $request->instrucoes, 3);
             });
-            
+
             // Construir o prompt com contexto
             $prompt = "Processo: {$processo->numero_cnj}\n";
             $prompt .= "Título: {$processo->titulo}\n\n";
@@ -70,12 +70,17 @@ class GptController extends Controller
 
             // Fazer a chamada para a OpenAI
             $response = $this->openaiClient->chat()->createStreamed([
-                'model' => 'gpt-4',
+                'model' => 'gpt-4-turbo-preview',
                 'messages' => [
                     ['role' => 'system', 'content' => 'Você é um assistente jurídico especializado em análise de processos e vai me retornar a quota da denúncia desse processo vinculado.'],
                     ['role' => 'user', 'content' => $prompt]
                 ],
-                'stream' => true
+                'stream' => true,
+                'temperature' => 0.3,
+                'max_tokens' => 2000,
+                'response_format' => ['type' => 'text'],
+                'presence_penalty' => 0,
+                'frequency_penalty' => 0
             ]);
 
             // Retornar a resposta em streaming
@@ -89,7 +94,7 @@ class GptController extends Controller
                         }
                     }
                 }
-                
+
                 // Envia o sinal de fim
                 echo "data: " . json_encode(['done' => true]) . "\n\n";
                 flush();
@@ -99,7 +104,6 @@ class GptController extends Controller
                 'X-Accel-Buffering' => 'no',
                 'Connection' => 'keep-alive'
             ]);
-
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -113,20 +117,24 @@ class GptController extends Controller
                 'numero_cnj' => 'required|string'
             ]);
 
-            $processo = Processo::where('numero_cnj', $request->numero_cnj)->firstOrFail();
-            
-            // Buscar textos similares usando embeddings
-            $textosSimilares = $this->embeddingService->buscarSimilares($processo, $request->instrucoes, 3);
-            
+            // Buscar processo com cache
+            $processo = Cache::remember("processo_{$request->numero_cnj}", 3600, function () use ($request) {
+                return Processo::where('numero_cnj', $request->numero_cnj)->firstOrFail();
+            });
+
+            // Usar cache para os embeddings
+            $cacheKey = "processo_embeddings_{$processo->id}";
+            $textosSimilares = Cache::remember($cacheKey, now()->addHours(24), function () use ($processo, $request) {
+                return $this->embeddingService->buscarSimilares($processo, $request->instrucoes, 3);
+            });
+
             // Construir o prompt com contexto
-            $prompt = "Processo: {$processo->numero_cnj}\n";
-            $prompt .= "Título: {$processo->titulo}\n\n";
-            $prompt .= "Contexto relevante sobre as partes:\n";
+            $prompt = "Contexto relevante sobre as partes:\n";
             foreach ($textosSimilares as $texto) {
                 $prompt .= "- {$texto->texto}\n";
             }
             $prompt .= "\nInstruções: {$request->instrucoes}\n";
-            $prompt .= "Por favor, analise o contexto e forneça uma resposta detalhada sobre as partes envolvidas no processo, seguindo EXATAMENTE este formato:\n\n";
+            $prompt .= "Por favor, analise o contextoe as instruções e forneça uma resposta detalhada sobre as partes envolvidas no processo, seguindo EXATAMENTE este formato:\n\n";
             $prompt .= "1. Vítima/Autora/Querelante:\n";
             $prompt .= "   - Nome completo:\n";
             $prompt .= "   - Documentos apresentados:\n";
@@ -151,14 +159,17 @@ class GptController extends Controller
 
             // Fazer a chamada para a OpenAI
             $response = $this->openaiClient->chat()->createStreamed([
-                'model' => 'gpt-4',
+                'model' => 'gpt-4-turbo-preview',
                 'messages' => [
                     ['role' => 'system', 'content' => 'Você é um assistente jurídico especializado em análise de processos. Sua resposta deve seguir EXATAMENTE o formato solicitado, preenchendo todos os campos mesmo que com "não informado" quando não houver dados.'],
                     ['role' => 'user', 'content' => $prompt]
                 ],
                 'stream' => true,
                 'temperature' => 0.3,
-                'max_tokens' => 2000
+                'max_tokens' => 2000,
+                'response_format' => ['type' => 'text'],
+                'presence_penalty' => 0,
+                'frequency_penalty' => 0
             ]);
 
             // Retornar a resposta em streaming
@@ -172,7 +183,7 @@ class GptController extends Controller
                         }
                     }
                 }
-                
+
                 // Envia o sinal de fim
                 echo "data: " . json_encode(['done' => true]) . "\n\n";
                 flush();
@@ -182,7 +193,6 @@ class GptController extends Controller
                 'X-Accel-Buffering' => 'no',
                 'Connection' => 'keep-alive'
             ]);
-
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
@@ -196,11 +206,17 @@ class GptController extends Controller
                 'numero_cnj' => 'required|string'
             ]);
 
-            $processo = Processo::where('numero_cnj', $request->numero_cnj)->firstOrFail();
-            
-            // Buscar textos similares usando embeddings
-            $textosSimilares = $this->embeddingService->buscarSimilares($processo, $request->instrucoes, 3);
-            
+            // Buscar processo com cache
+            $processo = Cache::remember("processo_{$request->numero_cnj}", 3600, function () use ($request) {
+                return Processo::where('numero_cnj', $request->numero_cnj)->firstOrFail();
+            });
+
+            // Usar cache para os embeddings
+            $cacheKey = "processo_embeddings_{$processo->id}";
+            $textosSimilares = Cache::remember($cacheKey, now()->addHours(24), function () use ($processo, $request) {
+                return $this->embeddingService->buscarSimilares($processo, $request->instrucoes, 3);
+            });
+
             // Construir o prompt com contexto
             $prompt = "Processo: {$processo->numero_cnj}\n";
             $prompt .= "Título: {$processo->titulo}\n\n";
@@ -213,14 +229,17 @@ class GptController extends Controller
 
             // Fazer a chamada para a OpenAI
             $response = $this->openaiClient->chat()->createStreamed([
-                'model' => 'gpt-4',
+                'model' => 'gpt-4-turbo-preview',
                 'messages' => [
                     ['role' => 'system', 'content' => 'Você é um assistente jurídico especializado em análise de processos, com foco em identificar e descrever os fatos relevantes.'],
                     ['role' => 'user', 'content' => $prompt]
                 ],
                 'stream' => true,
                 'temperature' => 0.7,
-                'max_tokens' => 2000
+                'max_tokens' => 2000,
+                'response_format' => ['type' => 'text'],
+                'presence_penalty' => 0,
+                'frequency_penalty' => 0
             ]);
 
             // Retornar a resposta em streaming
@@ -234,7 +253,7 @@ class GptController extends Controller
                         }
                     }
                 }
-                
+
                 // Envia o sinal de fim
                 echo "data: " . json_encode(['done' => true]) . "\n\n";
                 flush();
@@ -244,7 +263,6 @@ class GptController extends Controller
                 'X-Accel-Buffering' => 'no',
                 'Connection' => 'keep-alive'
             ]);
-
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);
         }
