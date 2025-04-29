@@ -34,23 +34,6 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'nfe' => [
-        'token' => env('NFE_API_TOKEN'),
-        'url' => env('NFE_API_URL'),
-    ],
-
-    'localai' => [
-        'url' => env('LOCALAI_URL', 'http://localhost:8080'),
-    ],
-
-    'deepseek' => [
-        'api_key' => env('DEEPSEEK_API_KEY'),
-        'base_uri' => env('DEEPSEEK_BASE_URI', 'https://api.deepseek.com/v1'),
-        'model' => env('DEEPSEEK_MODEL', 'deepseek-chat'),
-        'temperature' => env('DEEPSEEK_TEMPERATURE', 0.7),
-        'max_tokens' => env('DEEPSEEK_MAX_TOKENS', 2000),
-    ],
-
     'embedding' => [
         'cache_ttl' => env('EMBEDDING_CACHE_TTL', 86400),
     ],
