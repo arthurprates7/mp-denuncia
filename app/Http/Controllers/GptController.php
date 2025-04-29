@@ -59,9 +59,8 @@ class GptController extends Controller
             });
 
             // Construir o prompt com contexto
-            $prompt = "Processo: {$processo->numero_cnj}\n";
-            $prompt .= "Título: {$processo->titulo}\n\n";
-            $prompt .= "Contexto relevante:\n";
+           
+            $prompt = "Contexto relevante:\n";
             foreach ($textosSimilares as $texto) {
                 $prompt .= "- {$texto->texto}\n";
             }
@@ -134,28 +133,7 @@ class GptController extends Controller
                 $prompt .= "- {$texto->texto}\n";
             }
             $prompt .= "\nInstruções: {$request->instrucoes}\n";
-            $prompt .= "Por favor, analise o contextoe as instruções e forneça uma resposta detalhada sobre as partes envolvidas no processo, seguindo EXATAMENTE este formato:\n\n";
-            $prompt .= "1. Vítima/Autora/Querelante:\n";
-            $prompt .= "   - Nome completo:\n";
-            $prompt .= "   - Documentos apresentados:\n";
-            $prompt .= "   - Endereço:\n";
-            $prompt .= "   - Narração do fato:\n\n";
-            $prompt .= "2. Acusado/Réu/Suspeito:\n";
-            $prompt .= "   - Nome completo:\n";
-            $prompt .= "   - Documentos apresentados:\n";
-            $prompt .= "   - Endereço:\n";
-            $prompt .= "   - Características pessoais:\n";
-            $prompt .= "   - Defesa apresentada:\n\n";
-            $prompt .= "3. Autoridades/Órgãos Envolvidos:\n";
-            $prompt .= "   - Juiz:\n";
-            $prompt .= "   - Autor Policial:\n";
-            $prompt .= "   - Peritos:\n\n";
-            $prompt .= "4. Testemunhas:\n";
-            $prompt .= "   - Nome e qualificação:\n\n";
-            $prompt .= "5. Observações:\n";
-            $prompt .= "   - Informações adicionais relevantes\n\n";
-            $prompt .= "6. Dúvidas ou Lacunas:\n";
-            $prompt .= "   - Informações não encontradas ou incompletas";
+            $prompt .= "Por favor, analise o contexto e as instruções e forneça uma resposta detalhada sobre as partes envolvidas no processo:\n\n";
 
             // Fazer a chamada para a OpenAI
             $response = $this->openaiClient->chat()->createStreamed([
@@ -217,15 +195,13 @@ class GptController extends Controller
                 return $this->embeddingService->buscarSimilares($processo, $request->instrucoes, 3);
             });
 
-            // Construir o prompt com contexto
-            $prompt = "Processo: {$processo->numero_cnj}\n";
-            $prompt .= "Título: {$processo->titulo}\n\n";
-            $prompt .= "Contexto relevante sobre os fatos:\n";
+           
+            $prompt = "Contexto relevante sobre os fatos:\n";
             foreach ($textosSimilares as $texto) {
                 $prompt .= "- {$texto->texto}\n";
             }
             $prompt .= "\nInstruções: {$request->instrucoes}\n";
-            $prompt .= "Por favor, analise o contexto e forneça uma resposta detalhada sobre os fatos relevantes do processo.";
+            $prompt .= "Por favor, analise o contexto e as instruções e forneça uma resposta detalhada sobre os fatos relevantes do processo.";
 
             // Fazer a chamada para a OpenAI
             $response = $this->openaiClient->chat()->createStreamed([

@@ -80,7 +80,8 @@ class EmbeddingService
             $cacheKey = 'similares:' . md5($consulta . $processo->id . $limite);
             
             return Cache::remember($cacheKey, $this->cacheTtl, function () use ($processo, $consulta, $limite) {
-                $embeddingVector = $processo->documentos->first()->embedding;
+                $embeddingConsulta = $this->gerarEmbedding($consulta);
+                $embeddingVector = $this->arrayToPgVector($embeddingConsulta);
 
                 // Buscar textos similares usando pgvector com índice otimizado
                 $resultados = DB::select('
