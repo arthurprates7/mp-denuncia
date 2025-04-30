@@ -8,11 +8,12 @@ use App\Http\Controllers\ProcessoController;
 
 Auth::routes();
 
+Route::get('/', 'HomeController@index')->name('home');
+
 
 Route::get('/', function () {
     return view('home');
 })->name('home');
-
 
 
 Route::get('/gpt/pdf', [GptController::class, 'getPdf'])->name('gpt.getPdf');

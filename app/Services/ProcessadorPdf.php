@@ -113,8 +113,14 @@ class ProcessadorPdf
             }
 
             // Se não encontrou um novo tipo de documento e está processando um documento
-            if ($documentoAtual !== null && !preg_match('/' . implode('|', array_values($tiposDocumentos)) . '/i', $pagina)) {
-                $conteudoAtual .= $pagina;
+            if ($documentoAtual !== null) {
+                $padraoGeral = implode('|', array_map(function($padrao) {
+                    return trim($padrao, '/i');
+                }, array_values($tiposDocumentos)));
+                
+                if (!preg_match('/' . $padraoGeral . '/i', $pagina)) {
+                    $conteudoAtual .= $pagina;
+                }
             }
         }
 
